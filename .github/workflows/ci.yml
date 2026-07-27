@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on:
-      - codebuild-test-build-${{ github.run_id }}-${{ github.run_attempt }}
+      - codebuild-test_build-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
       - run: echo "Hello from CodeBuild runner!"
