@@ -1,8 +1,11 @@
 name: CI
 on: [push, workflow_dispatch]
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      - codebuild-test-build-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Workflow initialized"
+      - run: echo "Hello from CodeBuild runner!"
+
