@@ -1,11 +1,39 @@
-name: CI
-on: [push, workflow_dispatch]
-
 jobs:
-  build:
-    runs-on:
-      - codebuild-test_build-${{ github.run_id }}-${{ github.run_attempt }}
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Hello from CodeBuild runner!"
+        with:
+          persist-credentials: false
+      - run: ./deploy.sh staging
 
+  security-pentest:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      actions: read
+      deployments: read
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::048506328542:role/pentest_role
+          aws-region: us-east-1
+          role-duration-seconds: 7200
+      - uses: aws-actions/aws-continuum-run-pentest@v1
+        with:
+          agent-space-id: as-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          pentest-id: pt-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+          severity-threshold: HIGH
+          on-scope-conflict: block
+          timeout-minutes: "45"
+
+  deploy-prod:
+    needs: [security-pentest]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh production
